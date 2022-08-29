@@ -2,10 +2,10 @@ import csv
 import datetime as dt
 import pandas as pd
 import matplotlib.pyplot as plt
-from numpy import NaN
 from dateutil.relativedelta import relativedelta
 from operator import itemgetter
-
+import statistics
+import numpy as np
 def readCSVFile():
     rows = []
     with open("U.S. Presidents Birth and Death Information - Sheet1.csv", 'r') as file:
@@ -25,6 +25,14 @@ def addNewHeaders(header):
 
     return header
 
+def getLivedDaysColumn(rows):
+    daysCol = []
+    for row in rows:
+        ld = row[8]
+        daysCol.append(ld)
+    
+    return daysCol
+
 def populate_data(rows):
 
     for row in rows:
@@ -38,7 +46,7 @@ def populate_data(rows):
             except ValueError:
                 # Its not Jun or June, eeek!
                 raise ValueError("Date format doesn't match!")
-        if dob == NaN:
+        if dob == np.NaN:
             continue
 
         dod = row[3]
@@ -125,6 +133,26 @@ def main():
     printPresidentsList(header,leastLivedPrez, 'leastLived.png')
     mostLivedPrez = sorted(rows, key=itemgetter(8), reverse=True)
     printPresidentsList(header,mostLivedPrez, 'mostLived.png')
+
+    #x = statistics.mean(rows, key=itemgetter(8))
+    #mean = np.average(np.array(rows), axis=0)
+    livedDays = getLivedDaysColumn(rows)
+    mean = np.mean(livedDays)
+    median = np.median(livedDays)
+    modeVal = statistics.mode(livedDays)
+    maxVal = np.max(livedDays)
+    minVal = np.min(livedDays)
+    std = np.std(livedDays)
+    weightedAvg = np.average(livedDays)
+    #df2 = rows[8].mean()
+    print (mean)
+    print (median)
+    print (modeVal)
+    print (std)
+    print (maxVal)
+    print (minVal)
+    print (weightedAvg)
+
 
 
 
