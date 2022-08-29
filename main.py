@@ -103,15 +103,19 @@ def getLivedDays(dob_obj, dod_obj):
     b = dt.datetime.strptime(b, '%b %d, %Y').date()
 
     return ((a - b).days)
-def printPresidentsList(header, list, name):
+def printTable(header, list, name):
     fig, ax = plt.subplots()
 
     fig.patch.set_visible(False)
     ax.axis('off')
     ax.axis('tight')
-    list.insert(0, header)
 
-    df = pd.DataFrame(list[1:11], columns=header)
+    if name!='statistics.png':
+        list.insert(0, header)
+        df = pd.DataFrame(list[1:11], columns=header)
+    else:
+        list.insert(0, ['Statistics Type', 'Value'])
+        df = pd.DataFrame(list[1:], columns=list[0])
 
     ax.table(cellText=df.values, colLabels=df.columns, loc='center', colColours=(['cyan'] * len(header)))
 
@@ -130,28 +134,29 @@ def main():
     #print (rows)
     leastLivedPrez = sorted(rows, key=itemgetter(8))
 
-    printPresidentsList(header,leastLivedPrez, 'leastLived.png')
+    printTable(header,leastLivedPrez, 'leastLived.png')
     mostLivedPrez = sorted(rows, key=itemgetter(8), reverse=True)
-    printPresidentsList(header,mostLivedPrez, 'mostLived.png')
+    printTable(header,mostLivedPrez, 'mostLived.png')
 
-    #x = statistics.mean(rows, key=itemgetter(8))
-    #mean = np.average(np.array(rows), axis=0)
     livedDays = getLivedDaysColumn(rows)
     mean = np.mean(livedDays)
     median = np.median(livedDays)
     modeVal = statistics.mode(livedDays)
     maxVal = np.max(livedDays)
     minVal = np.min(livedDays)
-    std = np.std(livedDays)
+    standardDeviation = np.std(livedDays)
     weightedAvg = np.average(livedDays)
-    #df2 = rows[8].mean()
-    print (mean)
-    print (median)
-    print (modeVal)
-    print (std)
-    print (maxVal)
-    print (minVal)
-    print (weightedAvg)
+
+
+    list = []
+    list.append(['Mean', mean])
+    list.append(['Weighted Average', weightedAvg])
+    list.append(['Median', median])
+    list.append(['Mode', modeVal])
+    list.append(['Max', maxVal])
+    list.append(['Min', minVal])
+    list.append(['Standard Deviation', standardDeviation])
+    printTable(header,list, 'statistics.png')
 
 
 
