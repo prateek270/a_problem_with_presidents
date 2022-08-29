@@ -1,11 +1,13 @@
 import csv
 import datetime as dt
+from turtle import color
 import pandas as pd
 import matplotlib.pyplot as plt
 from dateutil.relativedelta import relativedelta
 from operator import itemgetter
 import statistics
 import numpy as np
+
 def readCSVFile():
     rows = []
     with open("U.S. Presidents Birth and Death Information - Sheet1.csv", 'r') as file:
@@ -32,6 +34,14 @@ def getLivedDaysColumn(rows):
         daysCol.append(ld)
     
     return daysCol
+
+def getPresidentsName(rows):
+    name = []
+    for row in rows:
+        pName = row[0]
+        name.append(pName)
+    
+    return name
 
 def populate_data(rows):
 
@@ -124,6 +134,30 @@ def printTable(header, list, name):
     plt.show()
 
 
+def plotGraph(x,y,list):
+    ax = plt.gca()
+
+    # Rotating the X-axis values by 90 to make them visible
+    ax.tick_params(axis='x', labelrotation=90)
+
+    # Filling color between the two values of Standard Deviation
+    #ax.fill_between(x, y_sd_min, y_sd_max, color='blue', alpha=0.15, label='Standard Deviation')
+
+    plt.plot(x,y)
+    plt.axhline(y=list[0][1], label='Mean - '+ str(format(list[0][1], ".2f")), linestyle=':',color = "red")
+    plt.axhline(y=list[2][1], label='Median - '+ str(format(list[2][1])), linestyle='-',color = "brown")
+    plt.axhline(y=list[3][1], label='Mode - '+ str(format(list[3][1])), linestyle='dotted',color = "orange")
+    plt.axhline(y=list[4][1], label='Max - '+ str(format(list[4][1])), linestyle='--',color = "green")
+    plt.axhline(y=list[5][1], label='Min - '+ str(format(list[5][1])), linestyle='--',color = "green")
+
+    plt.xlabel('Name of the president')
+    plt.ylabel('Number of days lived')
+    plt.title("Line graph to show number of days lived by each president")
+    plt.xticks(rotation = 90)
+    plt.tick_params(axis='x', which='major', labelsize=8)
+    legend = ax.legend(loc='lower left')
+    plt.show()
+
 def main():
     header, rows = readCSVFile()
     #print (rows)
@@ -134,11 +168,13 @@ def main():
     #print (rows)
     leastLivedPrez = sorted(rows, key=itemgetter(8))
 
-    printTable(header,leastLivedPrez, 'leastLived.png')
+    #printTable(header,leastLivedPrez, 'leastLived.png')
     mostLivedPrez = sorted(rows, key=itemgetter(8), reverse=True)
-    printTable(header,mostLivedPrez, 'mostLived.png')
+    #printTable(header,mostLivedPrez, 'mostLived.png')
 
     livedDays = getLivedDaysColumn(rows)
+    presidentsName = getPresidentsName(rows)
+
     mean = np.mean(livedDays)
     median = np.median(livedDays)
     modeVal = statistics.mode(livedDays)
@@ -156,10 +192,9 @@ def main():
     list.append(['Max', maxVal])
     list.append(['Min', minVal])
     list.append(['Standard Deviation', standardDeviation])
-    printTable(header,list, 'statistics.png')
-
-
-
+    #printTable(header,list, 'statistics.png')
+    plotGraph(presidentsName,livedDays, list)
+    print(list)
 
 
 main()
