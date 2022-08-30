@@ -1,11 +1,11 @@
 import csv
 import datetime as dt
-import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import statistics
 from dateutil.relativedelta import relativedelta
 from operator import itemgetter
-import statistics
-import numpy as np
 
 def readCSVFile():
     rows = []
@@ -27,12 +27,12 @@ def getLivedDaysColumn(rows):
     return daysCol
 
 def getPresidentsName(rows):
-    name = []
+    names = []
     for row in rows:
         pName = row[0]
-        name.append(pName)
+        names.append(pName)
     
-    return name
+    return names
 
 def addData(rows):
     for row in rows:
@@ -60,7 +60,7 @@ def addData(rows):
 
         birthYear = birthObj.year
         row.append(birthYear)
-        if deathObj == ' ':
+        if deathObj == '':
             today_str = dt.datetime.strftime(dt.date.today(), '%b %d, %Y')
             deathObj = dt.datetime.strptime(today_str, '%b %d, %Y')
             
@@ -73,15 +73,10 @@ def addData(rows):
     return rows
 
 
-def getLivedDays(dob_obj, dod_obj):
-    effective_dod_obj = dod_obj
-    if (effective_dod_obj == ''):
-        today_str = dt.datetime.strftime(dt.date.today(), '%b %d, %Y')
-        effective_dod_obj = dt.datetime.strptime(today_str, '%b %d, %Y')
-
-    a = dt.datetime.strftime(effective_dod_obj, '%b %d, %Y')
+def getLivedDays(birthObj, deathObj):
+    a = dt.datetime.strftime(deathObj, '%b %d, %Y')
     a = dt.datetime.strptime(a, '%b %d, %Y').date()
-    b = dt.datetime.strftime(dob_obj, '%b %d, %Y')
+    b = dt.datetime.strftime(birthObj, '%b %d, %Y')
     b = dt.datetime.strptime(b, '%b %d, %Y').date()
 
     return ((a - b).days)
@@ -93,7 +88,7 @@ def printTable(header, list, name):
     ax.axis('off')
     ax.axis('tight')
     headerLen = len(header)
-    if name!='statistics.png':
+    if name != 'statistics.png':
         list.insert(0, header)
         df = pd.DataFrame(list[1:11], columns=header)
     else:
@@ -169,6 +164,5 @@ def main():
     #printTable(header,list, 'statistics.png')
     plotGraph(presidentsName,livedDays, list)
     #print(list)
-
 
 main()
