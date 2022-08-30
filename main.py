@@ -1,6 +1,5 @@
 import csv
 import datetime as dt
-from turtle import color
 import pandas as pd
 import matplotlib.pyplot as plt
 from dateutil.relativedelta import relativedelta
@@ -19,14 +18,6 @@ def readCSVFile():
     return header, rows
 
 
-def addNewHeaders(header):
-    header.append('year_of_birth')
-    header.append('lived_years')
-    header.append('lived_months')
-    header.append('lived_days')
-
-    return header
-
 def getLivedDaysColumn(rows):
     daysCol = []
     for row in rows:
@@ -43,18 +34,15 @@ def getPresidentsName(rows):
     
     return name
 
-def populate_data(rows):
-
+def addData(rows):
     for row in rows:
         dob = row[1]
         try:
             birthObj = dt.datetime.strptime(dob, '%b %d, %Y')
         except ValueError:
-            # It didn't work with %b, try with %B
             try:
                 birthObj = dt.datetime.strptime(dob, '%B %d, %Y')
             except ValueError:
-                # Its not Jun or June, eeek!
                 raise ValueError("Date format doesn't match!")
         if dob == np.NaN:
             continue
@@ -65,40 +53,24 @@ def populate_data(rows):
             try:
                 deathObj = dt.datetime.strptime(dod, '%b %d, %Y')
             except ValueError:
-                # It didn't work with %b, try with %B
                 try:
                     deathObj = dt.datetime.strptime(dod, '%B %d, %Y')
                 except ValueError:
-                    # Its not Jun or June, eeek!
                     raise ValueError("Date format doesn't match!")
 
         birthYear = birthObj.year
         row.append(birthYear)
-        livedYears = getLivedYears(birthObj, deathObj)
+        if deathObj == ' ':
+            today_str = dt.datetime.strftime(dt.date.today(), '%b %d, %Y')
+            deathObj = dt.datetime.strptime(today_str, '%b %d, %Y')
+            
+        livedYears = relativedelta(deathObj, birthObj).years
         row.append(livedYears)
-        row.append(getLivedMonths(birthObj, deathObj, livedYears))
+        livedMonths = relativedelta(deathObj, birthObj).months + (livedYears * 12)
+        row.append(livedMonths)
         row.append(getLivedDays(birthObj, deathObj))
 
     return rows
-
-def getLivedYears(dob_obj, dod_obj):
-    effective_dod_obj = dod_obj
-
-    if (effective_dod_obj == ''):
-        today_str = dt.datetime.strftime(dt.date.today(), '%b %d, %Y')
-        effective_dod_obj = dt.datetime.strptime(today_str, '%b %d, %Y')
-
-    return (relativedelta(effective_dod_obj, dob_obj).years)
-
-
-def getLivedMonths(dob_obj, dod_obj, total_years):
-    effective_dod_obj = dod_obj
-
-    if (effective_dod_obj == ''):
-        today_str = dt.datetime.strftime(dt.date.today(), '%b %d, %Y')
-        effective_dod_obj = dt.datetime.strptime(today_str, '%b %d, %Y')
-
-    return (relativedelta(effective_dod_obj, dob_obj).months + (total_years * 12))
 
 
 def getLivedDays(dob_obj, dod_obj):
@@ -113,21 +85,23 @@ def getLivedDays(dob_obj, dod_obj):
     b = dt.datetime.strptime(b, '%b %d, %Y').date()
 
     return ((a - b).days)
+
 def printTable(header, list, name):
     fig, ax = plt.subplots()
 
     fig.patch.set_visible(False)
     ax.axis('off')
     ax.axis('tight')
-
+    headerLen = len(header)
     if name!='statistics.png':
         list.insert(0, header)
         df = pd.DataFrame(list[1:11], columns=header)
     else:
         list.insert(0, ['Statistics Type', 'Value'])
         df = pd.DataFrame(list[1:], columns=list[0])
+        headerLen = 2
 
-    ax.table(cellText=df.values, colLabels=df.columns, loc='center', colColours=(['cyan'] * len(header)))
+    ax.table(cellText=df.values, colLabels=df.columns, loc='center', colColours=(['cyan'] * headerLen))
 
     fig.tight_layout()
     plt.savefig(name, dpi=400)
@@ -137,14 +111,10 @@ def printTable(header, list, name):
 def plotGraph(x,y,list):
     ax = plt.gca()
 
-    # Rotating the X-axis values by 90 to make them visible
     ax.tick_params(axis='x', labelrotation=90)
 
-    # Filling color between the two values of Standard Deviation
-    #ax.fill_between(x, y_sd_min, y_sd_max, color='blue', alpha=0.15, label='Standard Deviation')
-
     plt.plot(x,y)
-    plt.axhline(y=list[0][1], label='Mean - '+ str(format(list[0][1], ".2f")), linestyle=':',color = "red")
+    plt.axhline(y=list[0][1], label='Mean - '+ str(format(list[0][1])), linestyle=':',color = "red")
     plt.axhline(y=list[2][1], label='Median - '+ str(format(list[2][1])), linestyle='-',color = "brown")
     plt.axhline(y=list[3][1], label='Mode - '+ str(format(list[3][1])), linestyle='dotted',color = "orange")
     plt.axhline(y=list[4][1], label='Max - '+ str(format(list[4][1])), linestyle='--',color = "green")
@@ -156,21 +126,25 @@ def plotGraph(x,y,list):
     plt.xticks(rotation = 90)
     plt.tick_params(axis='x', which='major', labelsize=8)
     legend = ax.legend(loc='lower left')
+    plt.savefig("graph.png", dpi=300)
     plt.show()
 
 def main():
     header, rows = readCSVFile()
     #print (rows)
+    header.append('year_of_birth')
+    header.append('lived_years')
+    header.append('lived_months')
+    header.append('lived_days')
 
-    header = addNewHeaders(header)
     #print ("--------------------")
-    rows = populate_data(rows)
+    rows = addData(rows)
     #print (rows)
-    leastLivedPrez = sorted(rows, key=itemgetter(8))
+    leastLivedPresidents = sorted(rows, key=itemgetter(8))
 
-    #printTable(header,leastLivedPrez, 'leastLived.png')
-    mostLivedPrez = sorted(rows, key=itemgetter(8), reverse=True)
-    #printTable(header,mostLivedPrez, 'mostLived.png')
+    printTable(header,leastLivedPresidents, 'leastLived.png')
+    mostLivedPresidents = sorted(rows, key=itemgetter(8), reverse=True)
+    printTable(header,mostLivedPresidents, 'mostLived.png')
 
     livedDays = getLivedDaysColumn(rows)
     presidentsName = getPresidentsName(rows)
@@ -194,7 +168,7 @@ def main():
     list.append(['Standard Deviation', standardDeviation])
     #printTable(header,list, 'statistics.png')
     plotGraph(presidentsName,livedDays, list)
-    print(list)
+    #print(list)
 
 
 main()
